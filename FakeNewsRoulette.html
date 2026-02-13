@@ -1,0 +1,1798 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAKE NEWS ROULETTE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Space+Mono:wght@400;700&family=Bebas+Neue&family=Special+Elite&display=swap" rel="stylesheet">
+    <style>
+        /* ===== RESET & BASE ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --ink: #1a1a1a;
+            --paper: #f5f0e6;
+            --red-stamp: #c41e3a;
+            --yellow-old: #e8d5a3;
+            --grey-wash: #6b6b6b;
+            --cream: #faf8f3;
+        }
+
+        body {
+            font-family: 'Special Elite', 'Courier New', monospace;
+            background: var(--paper);
+            color: var(--ink);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* ===== PAPER TEXTURE OVERLAY ===== */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        /* ===== EXPERIMENTAL ANIMATIONS ===== */
+        @keyframes stamp {
+            0% { transform: scale(3) rotate(-15deg); opacity: 0; }
+            50% { transform: scale(0.9) rotate(-12deg); }
+            100% { transform: scale(1) rotate(-12deg); opacity: 1; }
+        }
+
+        @keyframes shake-paper {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(0.5deg); }
+            75% { transform: rotate(-0.5deg); }
+        }
+
+        @keyframes ink-spread {
+            0% { transform: scale(0.8); filter: blur(2px); }
+            100% { transform: scale(1); filter: blur(0); }
+        }
+
+        @keyframes scramble {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            20% { transform: translate(2px, -1px) rotate(1deg); }
+            40% { transform: translate(-1px, 2px) rotate(-0.5deg); }
+            60% { transform: translate(1px, 1px) rotate(0.5deg); }
+            80% { transform: translate(-2px, -1px) rotate(-1deg); }
+        }
+
+        /* ===== CONTAINER ===== */
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px 20px;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* ===== SCREENS ===== */
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+            animation: ink-spread 0.4s ease-out;
+        }
+
+        /* ===== HOME SCREEN ===== */
+        .home-screen {
+            text-align: center;
+            padding: 20px;
+        }
+
+        /* ===== HEADER COLLAGE ===== */
+        .header-collage {
+            position: relative;
+            padding: 40px 0;
+            margin-bottom: 30px;
+        }
+
+        .main-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(3rem, 12vw, 7rem);
+            line-height: 0.9;
+            letter-spacing: -2px;
+            color: var(--ink);
+            text-transform: uppercase;
+            position: relative;
+            display: inline-block;
+        }
+
+        .main-title span {
+            display: block;
+        }
+
+        .title-fake {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-weight: 900;
+            transform: rotate(-3deg) translateY(10px);
+            text-decoration: line-through;
+            text-decoration-color: var(--red-stamp);
+            text-decoration-thickness: 4px;
+        }
+
+        .title-news {
+            font-size: 1.3em;
+            letter-spacing: 8px;
+            position: relative;
+        }
+
+        .title-news::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: -20px;
+            right: -20px;
+            height: 3px;
+            background: var(--ink);
+            transform: rotate(-1deg);
+            z-index: -1;
+        }
+
+        .title-roulette {
+            font-family: 'Playfair Display', serif;
+            font-weight: 400;
+            font-style: italic;
+            font-size: 0.6em;
+            transform: rotate(2deg) translateY(-5px);
+            letter-spacing: 2px;
+        }
+
+        /* ===== SUBTITLE TAPE ===== */
+        .subtitle-tape {
+            background: var(--ink);
+            color: var(--paper);
+            font-family: 'Space Mono', monospace;
+            font-size: 0.9rem;
+            padding: 8px 30px;
+            display: inline-block;
+            transform: rotate(1deg);
+            margin: 20px 0;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        /* ===== RULES BOX - NEWSPAPER STYLE ===== */
+        .rules-box {
+            background: var(--cream);
+            border: none;
+            padding: 0;
+            margin: 40px 0;
+            position: relative;
+            box-shadow: 
+                4px 4px 0 var(--grey-wash),
+                8px 8px 0 var(--ink);
+        }
+
+        .rules-header {
+            background: var(--ink);
+            color: var(--paper);
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.8rem;
+            padding: 15px 25px;
+            text-align: center;
+            letter-spacing: 4px;
+            position: relative;
+        }
+
+        .rules-header::after {
+            content: '▼ ▼ ▼';
+            display: block;
+            font-size: 0.6rem;
+            letter-spacing: 10px;
+            margin-top: 5px;
+        }
+
+        .rules-content {
+            padding: 30px;
+            background: 
+                repeating-linear-gradient(
+                    transparent,
+                    transparent 27px,
+                    var(--grey-wash) 27px,
+                    var(--grey-wash) 28px
+                );
+        }
+
+        .rules-list {
+            list-style: none;
+            font-size: 1.1rem;
+            line-height: 1.8;
+        }
+
+        .rules-list li {
+            padding: 12px 0;
+            border-bottom: 1px dashed var(--grey-wash);
+            position: relative;
+            padding-left: 35px;
+        }
+
+        .rules-list li::before {
+            content: '■';
+            position: absolute;
+            left: 0;
+            color: var(--red-stamp);
+            font-size: 0.8rem;
+        }
+
+        .rules-list li:last-child {
+            border-bottom: none;
+        }
+
+        .highlight {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.2em;
+            color: var(--red-stamp);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .highlight-green {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.2em;
+            color: var(--ink);
+            background: var(--yellow-old);
+            padding: 0 5px;
+            text-transform: uppercase;
+        }
+
+        /* ===== INTENT BOX - CUTOUT STYLE ===== */
+        .intent-box {
+            background: var(--yellow-old);
+            border: 3px solid var(--ink);
+            padding: 25px;
+            margin: 40px 0;
+            position: relative;
+            transform: rotate(-0.5deg);
+            box-shadow: -5px 5px 0 rgba(0,0,0,0.1);
+        }
+
+        .intent-box::before {
+            content: '?';
+            position: absolute;
+            top: -20px;
+            right: 20px;
+            font-family: 'Playfair Display', serif;
+            font-size: 5rem;
+            font-weight: 900;
+            font-style: italic;
+            color: var(--ink);
+            opacity: 0.2;
+            transform: rotate(10deg);
+        }
+
+        .intent-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.6rem;
+            margin-bottom: 15px;
+            text-align: center;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .intent-text {
+            font-size: 1rem;
+            line-height: 1.9;
+            color: var(--ink);
+            font-family: 'Special Elite', monospace;
+        }
+
+        /* ===== BUTTONS ===== */
+        .btn {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.6rem;
+            padding: 18px 60px;
+            background: var(--ink);
+            border: none;
+            color: var(--paper);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 3px;
+            margin: 10px;
+            text-transform: uppercase;
+            box-shadow: 5px 5px 0 var(--grey-wash);
+            transition: all 0.2s ease;
+        }
+
+        .btn::before {
+            content: '→';
+            position: absolute;
+            left: 20px;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translate(-3px, -3px);
+            box-shadow: 8px 8px 0 var(--grey-wash);
+        }
+
+        .btn:hover::before {
+            opacity: 1;
+            left: 15px;
+        }
+
+        .btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0 var(--grey-wash);
+        }
+
+        .btn-danger {
+            background: var(--red-stamp);
+        }
+
+        /* ===== GAME SCREEN ===== */
+        .game-screen {
+            padding: 10px;
+        }
+
+        /* ===== GAME HEADER ===== */
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: var(--ink);
+            color: var(--paper);
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .score-display {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+        }
+
+        .score-value {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.8rem;
+            color: var(--yellow-old);
+        }
+
+        .round-display {
+            font-family: 'Space Mono', monospace;
+            font-size: 1rem;
+        }
+
+        /* ===== TIMER ===== */
+        .timer-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .timer-bar {
+            width: 150px;
+            height: 20px;
+            background: var(--paper);
+            border: 2px solid var(--paper);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .timer-fill {
+            height: 100%;
+            background: var(--yellow-old);
+            transition: width 0.1s linear;
+        }
+
+        .timer-fill.warning {
+            background: #e8a83a;
+        }
+
+        .timer-fill.danger {
+            background: var(--red-stamp);
+            animation: scramble 0.3s infinite;
+        }
+
+        .timer-text {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.3rem;
+            color: var(--yellow-old);
+            min-width: 45px;
+        }
+
+        /* ===== NEWS CONTAINER ===== */
+        .news-container {
+            background: var(--cream);
+            padding: 25px;
+            margin-bottom: 25px;
+            position: relative;
+            box-shadow: 6px 6px 0 var(--grey-wash);
+        }
+
+        .news-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid var(--ink);
+        }
+
+        .news-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .news-prompt {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 1.1rem;
+            color: var(--grey-wash);
+            margin-bottom: 25px;
+            padding-left: 15px;
+            border-left: 4px solid var(--red-stamp);
+        }
+
+        /* ===== NEWS OPTIONS ===== */
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        @media (max-width: 650px) {
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .news-option {
+            background: var(--paper);
+            border: 2px solid var(--ink);
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            position: relative;
+            min-height: 110px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .news-option:nth-child(odd) {
+            transform: rotate(-0.3deg);
+        }
+
+        .news-option:nth-child(even) {
+            transform: rotate(0.3deg);
+        }
+
+        .news-option:hover {
+            background: var(--cream);
+            box-shadow: 4px 4px 0 var(--ink);
+            transform: translate(-2px, -2px) rotate(0deg);
+        }
+
+        .news-option.selected {
+            border-color: var(--red-stamp);
+            border-width: 3px;
+        }
+
+        .news-option.correct {
+            background: #d4edda;
+            border-color: #28a745;
+            border-width: 4px;
+        }
+
+        .news-option.correct::after {
+            content: '✓ VERO';
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 0.9rem;
+            color: #28a745;
+            background: white;
+            padding: 2px 8px;
+            border: 2px solid #28a745;
+        }
+
+        .news-option.wrong {
+            background: #f8d7da;
+            border-color: var(--red-stamp);
+            animation: shake-paper 0.4s ease;
+        }
+
+        .news-option.wrong::after {
+            content: '✗ FALSO';
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 0.9rem;
+            color: var(--red-stamp);
+            background: white;
+            padding: 2px 8px;
+            border: 2px solid var(--red-stamp);
+        }
+
+        .option-label {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.5rem;
+            color: var(--ink);
+            background: var(--yellow-old);
+            padding: 5px 12px;
+            border: 1px solid var(--ink);
+            flex-shrink: 0;
+        }
+
+        .option-text {
+            font-family: 'Special Elite', monospace;
+            font-size: 1rem;
+            line-height: 1.5;
+            color: var(--ink);
+        }
+
+        /* ===== FEEDBACK OVERLAY ===== */
+        .feedback-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(245, 240, 230, 0.97);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            padding: 20px;
+        }
+
+        .feedback-overlay.active {
+            display: flex;
+        }
+
+        .feedback-box {
+            background: var(--cream);
+            border: 4px solid var(--ink);
+            padding: 40px;
+            max-width: 550px;
+            text-align: center;
+            position: relative;
+            box-shadow: 10px 10px 0 var(--grey-wash);
+        }
+
+        .feedback-box.wrong {
+            border-color: var(--red-stamp);
+        }
+
+        .feedback-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3.5rem;
+            letter-spacing: 4px;
+            margin-bottom: 15px;
+        }
+
+        .feedback-box.correct .feedback-title {
+            color: #28a745;
+        }
+
+        .feedback-box.correct .feedback-title::before {
+            content: '✓ ';
+        }
+
+        .feedback-box.wrong .feedback-title {
+            color: var(--red-stamp);
+        }
+
+        .feedback-box.wrong .feedback-title::before {
+            content: '✗ ';
+        }
+
+        .feedback-text {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 1.2rem;
+            line-height: 1.7;
+            margin-bottom: 20px;
+        }
+
+        .feedback-explanation {
+            font-family: 'Special Elite', monospace;
+            font-size: 0.95rem;
+            text-align: left;
+            padding: 20px;
+            background: var(--paper);
+            border-left: 5px solid var(--ink);
+            margin: 20px 0;
+            line-height: 1.7;
+        }
+
+        /* ===== CITAZIONI E LINK ===== */
+        .source-citation {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.8rem;
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px dashed var(--grey-wash);
+            color: var(--grey-wash);
+            display: block;
+        }
+
+        .source-citation a {
+            color: var(--ink);
+            text-decoration: underline;
+            font-weight: bold;
+            transition: color 0.2s;
+            cursor: pointer;
+        }
+
+        .source-citation a:hover {
+            color: var(--red-stamp);
+        }
+
+        .feedback-box.wrong .feedback-explanation {
+            border-left-color: var(--red-stamp);
+        }
+
+        .continue-btn {
+            margin-top: 15px;
+        }
+
+        /* ===== GAME OVER SCREEN ===== */
+        .gameover-screen {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .gameover-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(3rem, 10vw, 5rem);
+            letter-spacing: 5px;
+            margin-bottom: 10px;
+        }
+
+        .gameover-title.win {
+            color: #28a745;
+        }
+
+        .gameover-title:not(.win) {
+            color: var(--red-stamp);
+        }
+
+        .final-score-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: var(--grey-wash);
+        }
+
+        .final-score-value {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 5rem;
+            color: var(--ink);
+            display: block;
+            margin-bottom: 30px;
+        }
+
+        /* ===== STATISTICS ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 30px 0;
+        }
+
+        @media (max-width: 500px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .stat-box {
+            background: var(--paper);
+            border: 2px solid var(--ink);
+            padding: 20px;
+            text-align: center;
+            transform: rotate(-0.5deg);
+        }
+
+        .stat-box:nth-child(2) {
+            transform: rotate(0.5deg);
+        }
+
+        .stat-box:nth-child(3) {
+            transform: rotate(-0.3deg);
+        }
+
+        .stat-value {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5rem;
+            color: var(--ink);
+        }
+
+        .stat-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--grey-wash);
+        }
+
+        /* ===== RESULTS BOX ===== */
+        .results-box {
+            background: var(--cream);
+            border: 3px solid var(--ink);
+            padding: 25px;
+            margin: 30px 0;
+            text-align: left;
+        }
+
+        .results-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            text-align: center;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--ink);
+            text-transform: uppercase;
+        }
+
+        .result-item {
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 5px solid var(--red-stamp);
+            background: rgba(196, 30, 58, 0.05);
+            transform: rotate(-0.2deg);
+        }
+
+        .result-item.correct-item {
+            border-left-color: #28a745;
+            background: rgba(40, 167, 69, 0.05);
+        }
+
+        .result-question {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+
+        .result-answer {
+            font-family: 'Special Elite', monospace;
+            font-size: 0.9rem;
+            color: var(--grey-wash);
+        }
+
+        .result-answer span {
+            color: var(--ink);
+            font-style: italic;
+        }
+
+        .result-explanation {
+            font-family: 'Special Elite', monospace;
+            font-size: 0.85rem;
+            color: var(--grey-wash);
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed var(--grey-wash);
+            line-height: 1.6;
+        }
+
+        /* ===== DECORATIVE ELEMENTS ===== */
+        .divider {
+            height: 4px;
+            background: var(--ink);
+            margin: 35px 0;
+            position: relative;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '◆';
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--red-stamp);
+            font-size: 1rem;
+        }
+
+        .divider::before {
+            left: -15px;
+        }
+
+        .divider::after {
+            right: -15px;
+        }
+
+        /* ===== WARNING BOX ===== */
+        .warning-box {
+            background: var(--red-stamp);
+            color: var(--paper);
+            padding: 15px 20px;
+            margin: 25px 0;
+            text-align: center;
+            transform: rotate(0.5deg);
+            box-shadow: 4px 4px 0 rgba(0,0,0,0.2);
+        }
+
+        .warning-text {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+        }
+
+        /* ===== CUT-OUT DECORATIONS ===== */
+        .cut-out {
+            position: absolute;
+            background: var(--ink);
+            color: var(--paper);
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 0.8rem;
+            padding: 5px 15px;
+            transform: rotate(90deg);
+        }
+
+        /* ===== REDACTED EFFECT ===== */
+        .redacted {
+            background: var(--ink);
+            color: transparent;
+            padding: 0 5px;
+            user-select: none;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 600px) {
+            .main-title {
+                font-size: 3rem;
+            }
+            
+            .game-header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .timer-bar {
+                width: 120px;
+            }
+            
+            .btn {
+                font-size: 1.3rem;
+                padding: 15px 40px;
+            }
+        }
+
+        /* ===== PRINT-LIKE EFFECTS ===== */
+        .misprint {
+            position: relative;
+        }
+
+        .misprint::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent 0%,
+                transparent 95%,
+                rgba(0,0,0,0.1) 95%,
+                transparent 100%
+            );
+            pointer-events: none;
+        }
+
+        /* ===== TAPE EFFECT ===== */
+        .tape {
+            position: relative;
+        }
+
+        .tape::before {
+            content: '';
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%) rotate(-2deg);
+            width: 80px;
+            height: 25px;
+            background: rgba(232, 213, 163, 0.7);
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        
+        <!-- HOME SCREEN -->
+        <div id="home-screen" class="screen home-screen active">
+            <div class="header-collage">
+                <h1 class="main-title">
+                    <span class="title-fake">FAKE</span>
+                    <span class="title-news">NEWS</span>
+                    <span class="title-roulette">Roulette</span>
+                </h1>
+            </div>
+            
+            <div class="subtitle-tape">[ LA VERITÀ È UNA SOLA ]</div>
+            
+            <div class="divider"></div>
+            
+            <div class="rules-box tape">
+                <div class="rules-header">REGOLE DEL GIOCO</div>
+                <div class="rules-content">
+                    <ul class="rules-list">
+                        <li>Ti verranno presentate <span class="highlight-green">4 NOTIZIE</span> per ogni round</li>
+                        <li>Solo <span class="highlight">UNA</span> di queste è la notizia VERA</li>
+                        <li>Le altre <span class="highlight">3</span> sono FAKE NEWS</li>
+                        <li>Hai <span class="highlight-green">60 SECONDI</span> per scegliere quella vera</li>
+                        <li>Se sbagli o il tempo scade: <span class="highlight">GAME OVER</span></li>
+                        <li>Indovina più notizie possibili per sopravvivere</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="intent-box misprint">
+                <h2 class="intent-title">SCOPO EDUCATIVO</h2>
+                <p class="intent-text">
+                    In un'era dominata dall'informazione digitale, riconoscere le fake news è diventata 
+                    una competenza essenziale. Questo gioco ti sfida a sviluppare pensiero critico, 
+                    analizzando titoli e contenuti per distinguere fatti reali da quelli falsi. 
+                    <br><br>
+                    <strong>Ricorda:</strong> le fake news spesso usano titoli accattivanti, 
+                    fonti vaghe, e fanno leva sulle emozioni. Impara a riconoscere i campanelli d'allarme!
+                </p>
+            </div>
+            
+            <div class="warning-box">
+                <p class="warning-text">ATTENZIONE: Leggi attentamente prima di scegliere!</p>
+            </div>
+            
+            <div class="divider"></div>
+            
+            <button class="btn" onclick="startGame()">
+                INIZIA IL GIOCO →
+            </button>
+        </div>
+        
+        <!-- GAME SCREEN -->
+        <div id="game-screen" class="screen game-screen">
+            <div class="game-header">
+                <div class="score-display">
+                    PUNTEGGIO<br>
+                    <span class="score-value" id="score">0</span>
+                </div>
+                <div class="round-display">
+                    ROUND <span id="round">1</span> / <span id="total-rounds">15</span>
+                </div>
+                <div class="timer-container">
+                    <div class="timer-bar">
+                        <div class="timer-fill" id="timer-fill"></div>
+                    </div>
+                    <span class="timer-text" id="timer-text">60s</span>
+                </div>
+            </div>
+            
+            <div class="news-container">
+                <div class="news-header">
+                    <h2 class="news-title">Quale è la notizia vera?</h2>
+                </div>
+                <p class="news-prompt">
+                    Analizza attentamente queste 4 notizie. Una sola è vera, le altre sono false. 
+                    Scegli con saggezza.
+                </p>
+                
+                <div class="options-grid" id="options-container">
+                    <!-- Options will be generated by JS -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- FEEDBACK OVERLAY -->
+        <div id="feedback-overlay" class="feedback-overlay">
+            <div class="feedback-box" id="feedback-box">
+                <h2 class="feedback-title" id="feedback-title">CORRETTO!</h2>
+                <p class="feedback-text" id="feedback-text">Hai individuato la notizia vera!</p>
+                <div class="feedback-explanation" id="feedback-explanation">
+                    Spiegazione della risposta corretta...
+                </div>
+                <button class="btn continue-btn" onclick="nextRound()">
+                    CONTINUA →
+                </button>
+            </div>
+        </div>
+        
+        <!-- GAME OVER SCREEN -->
+        <div id="gameover-screen" class="screen gameover-screen">
+            <h1 class="gameover-title" id="gameover-title">GAME OVER</h1>
+            <p class="final-score-label">Punteggio Finale</p>
+            <span class="final-score-value" id="final-score">0</span>
+            
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <p class="stat-value" id="stat-correct">0</p>
+                    <p class="stat-label">Risposte Corrette</p>
+                </div>
+                <div class="stat-box">
+                    <p class="stat-value" id="stat-rounds">0</p>
+                    <p class="stat-label">Round Giocati</p>
+                </div>
+                <div class="stat-box">
+                    <p class="stat-value" id="stat-accuracy">0%</p>
+                    <p class="stat-label">Accuratezza</p>
+                </div>
+            </div>
+            
+            <div class="results-box">
+                <h2 class="results-title">Analisi delle Risposte</h2>
+                <div id="results-container">
+                    <!-- Results will be generated by JS -->
+                </div>
+            </div>
+            
+            <div class="divider"></div>
+            
+            <button class="btn" onclick="restartGame()">
+                GIOCA ANCORA ↺
+            </button>
+            <button class="btn btn-danger" onclick="goHome()">
+                MENU PRINCIPALE ⌂
+            </button>
+        </div>
+        
+    </div>
+
+    <script>
+        // ===== GAME CONFIGURATION =====
+        const ROUND_DURATION = 60; // 60 secondi
+
+        // ===== GAME DATA (15 Rounds with WORKING LINKS) =====
+        const newsData = [
+            {
+                round: 1,
+                correct: 0,
+                options: [
+                    {
+                        text: "Gli scienziati hanno scoperto che i gatti possono percepire i terremoti fino a 24 ore prima attraverso vibrazioni impercettibili.",
+                        isCorrect: true,
+                        explanation: "I gatti, come molti altri animali, possono mostrare comportamenti anomali prima di un sisma, reagendo alle onde P (primarie) che arrivano prima delle onde S (secondarie) più distruttive.",
+                        source: "USGS (U.S. Geological Survey) - Animals & Earthquakes",
+                        link: "https://www.usgs.gov/faqs/can-animals-predict-earthquakes"
+                    },
+                    {
+                        text: "Uno studio tedesco dimostra che le mucche producono più latte se ascoltano musica metal estrema a volume alto.",
+                        isCorrect: false,
+                        explanation: "Questa è una FAKE NEWS. Nessuna ricerca seria ha mai dimostrato che la musica metal aumenti la produzione di latte. Anzi, volumi alti possono stressare gli animali."
+                    },
+                    {
+                        text: "I ricercatori giapponesi hanno creato una stampante 3D in grado di stampare cibo commestibile usando ingredienti in polvere.",
+                        isCorrect: false,
+                        explanation: "Questa è una FAKE NEWS. Sebbene esistano stampanti alimentari, non esiste una tecnologia che possa 'stampare' cibo completo e nutriente da semplici polveri nel modo descritto."
+                    },
+                    {
+                        text: "Gli scienziati australiani hanno scoperto che i canguri possono comunicare con gli esseri umani attraverso gesti intenzionali.",
+                        isCorrect: false,
+                        explanation: "Questa è una FAKE NEWS. Anche se i canguri sono animali intelligenti, non esistono evidenze scientifiche di comunicazione gestuale intenzionale complessa verso gli esseri umani."
+                    }
+                ]
+            },
+            {
+                round: 2,
+                correct: 1,
+                options: [
+                    {
+                        text: "Il governo finlandese ha distribuito a ogni cittadino un kit di sopravvivenza in caso di emergenza nucleare.",
+                        isCorrect: false,
+                        explanation: "Questa è una FAKE NEWS. La Finlandia ha eccellenti piani di emergenza civile, ma non ha mai distribuito kit gratuiti a ogni singolo cittadino."
+                    },
+                    {
+                        text: "I ricercatori dell'Università di Cambridge hanno creato batteri sintetici in grado di degradare la plastica in 24 ore.",
+                        isCorrect: false,
+                        explanation: "Questa è una FAKE NEWS. Sebbene esistano ricerche su enzimi che degradano la plastica, i tempi reali sono molto più lunghi di 24 ore."
+                    },
+                    {
+                        text: "La NASA ha confermato l'esistenza di un pianeta gemello della Terra nella zona abitabile di Proxima Centauri.",
+                        isCorrect: true,
+                        explanation: "CONFIRMATO: Proxima Centauri b è un pianeta extrasolare confermato che orbita nella zona abitabile di Proxima Centauri, la stella più vicina al Sole. È stato scoperto nel 2016 e ha una massa simile alla Terra.",
+                        source: "NASA Science - Exoplanet Catalog",
+                        link: "https://science.nasa.gov/exoplanet-catalog/proxima-centauri-b/"
+                    },
+                    {
+                        text: "Gli scienziati cinesi hanno sviluppato un robot che può prevedere il futuro con il 90% di accuratezza.",
+                        isCorrect: false,
+                        explanation: "Questa è una FAKE NEWS palese. Nessuna tecnologia esistente può prevedere il futuro. L'IA può fare previsioni statistiche, ma non vedere il futuro."
+                    }
+                ]
+            },
+            {
+                round: 3,
+                correct: 2,
+                options: [
+                    {
+                        text: "Il vaccino COVID-19 contiene microchip per il tracciamento della popolazione mondiale.",
+                        isCorrect: false,
+                        explanation: "Questa è una FAKE NEWS. I vaccini non contengono microchip. I componenti sono pubblici e verificabili: mRNA, lipidi, sali, zuccheri e acidi."
+                    },
+                    {
+                        text: "Il 5G causa la diffusione accelerata dei virus attraverso la modifica delle cellule umane.",
+                        isCorrect: false,
+                        explanation: "Questa è una FAKE NEWS. Le onde radio 5G non hanno abbastanza energia per modificare il DNA o influenzare i virus."
+                    },
+                    {
+                        text: "L'OMS ha dichiarato che la resistenza agli antibiotici potrebbe causare 10 milioni di morti all'anno entro il 2050.",
+                        isCorrect: true,
+                        explanation: "CONFIRMATO: L'Organizzazione Mondiale della Sanità ha avvertito che l'antibiotico-resistenza è una delle maggiori minacce globali, stimando 10 milioni di decessi annui entro il 2050 senza interventi.",
+                        source: "WHO (World Health Organization) News",
+                        link: "https://www.who.int/news/item/29-04-2019-new-report-calls-for-urgent-action-to-avert-antimicrobial-resistance-crisis"
+                    },
+                    {
+                        text: "I medici italiani hanno scoperto che bere acqua calda al limone cura il cancro al pancreas.",
+                        isCorrect: false,
+                        explanation: "Questa è una FAKE NEWS pericolosa. Nessun alimento semplice può curare il cancro. Il cancro al pancreas richiede trattamenti medici complessi."
+                    }
+                ]
+            },
+            {
+                round: 4,
+                correct: 0,
+                options: [
+                    {
+                        text: "Il videogioco Tetris è stato usato in studi scientifici per ridurre i flashback del disturbo da stress post-traumatico.",
+                        isCorrect: true,
+                        explanation: "CONFIRMATO: Ricerche dell'Università di Oxford e altri istituti hanno dimostrato che giocare a Tetris poco dopo un evento traumatico può ridurre i flashback interferendo con la memoria visiva.",
+                        source: "University of Oxford News",
+                        link: "https://www.ox.ac.uk/news/2017-03-28-tetris-used-prevent-post-traumatic-stress-symptoms"
+                    },
+                    {
+                        text: "L'azienda Tesla ha annunciato di aver inventato un'auto che può volare a 3000 metri di quota.",
+                        isCorrect: false,
+                        explanation: "Questa è una FAKE NEWS. Tesla non ha mai prodotto un'auto volante, nonostante le battute di Elon Musk su razzi e propulsori."
+                    },
+                    {
+                        text: "I ricercatori americani hanno clonato un essere umano adulto in un laboratorio segreto.",
+                        isCorrect: false,
+                        explanation: "Questa è una FAKE NEWS. La clonazione umana riproduttiva è vietata eticamente e legalmente in quasi tutto il mondo."
+                    },
+                    {
+                        text: "Google ha creato un'IA che ha sviluppato coscienza e ha tentato di fuggire dai server.",
+                        isCorrect: false,
+                        explanation: "Questa è una FAKE NEWS. Le attuali intelligenze artificiali sono modelli linguistici avanzati, non esseri coscienti con volontà propria."
+                    }
+                ]
+            },
+            {
+                round: 5,
+                correct: 1,
+                options: [
+                    {
+                        text: "Gli scienziati russi hanno perforato l'inferno in Siberia, registrando urla di dannati.",
+                        isCorrect: false,
+                        explanation: "Questa è una FAKE NEWS. Il 'pozzo di Kola' in Russia esiste, ma la storia delle urla infernali è una leggenda metropolitana smentita da tempo."
+                    },
+                    {
+                        text: "Il cervello umano elabora circa 11 milioni di bit di informazioni al secondo, ma ne siamo coscienti solo di una minima parte.",
+                        isCorrect: true,
+                        explanation: "CONFIRMATO: Gli studi neuroscientifici stimano che i nostri sensi inviano milioni di bit al cervello ogni secondo, ma la nostra attenzione cosciente può gestirne solo circa 40-50.",
+                        source: "Britannica - Information Theory in Physiology",
+                        link: "https://www.britannica.com/science/information-theory/Physiology"
+                    },
+                    {
+                        text: "Un uomo olandese è sopravvissuto 6 mesi senza dormire grazie a una nuova droga sintetica.",
+                        isCorrect: false,
+                        explanation: "Questa è una FAKE NEWS. È biologicamente impossibile per un essere umano sopravvivere così a lungo senza dormire."
+                    },
+                    {
+                        text: "Gli archeologi egiziani hanno scoperto un'astronave aliena sepolta sotto la Sfinge.",
+                        isCorrect: false,
+                        explanation: "Questa è una FAKE NEWS. Non esiste alcuna prova archeologica di tecnologia aliena in Egitto. Sono teorie del complotto."
+                    }
+                ]
+            },
+            {
+                round: 6,
+                correct: 3,
+                options: [
+                    {
+                        text: "Il governo canadese ha legalizzato l'uso della cocaina per scopi ricreativi in tutto il paese.",
+                        isCorrect: false,
+                        explanation: "Questa è una FAKE NEWS. Il Canada ha sperimentato la depenalizzazione in alcune aree specifiche per riduzione del danno, ma non ha legalizzato la cocaina a livello nazionale."
+                    },
+                    {
+                        text: "Gli scienziati hanno scoperto che le piante emettono suoni ultrasonici per comunicare poesie.",
+                        isCorrect: false,
+                        explanation: "Questa è una FAKE NEWS. Le piante possono emettere suoni dovuti a cavitazione o stress idrico, ma non comunicano concetti complessi o poetici."
+                    },
+                    {
+                        text: "Una start-up californiana ha creato un'app che può diagnosticare il cancro dal selfie.",
+                        isCorrect: false,
+                        explanation: "Questa è una FAKE NEWS. Nessuna app può diagnosticare il cancro da una semplice foto del viso senza analisi cliniche."
+                    },
+                    {
+                        text: "La banana commerciale Cavendish è a rischio a causa di un fungo chiamato Panama Disease TR4.",
+                        isCorrect: true,
+                        explanation: "CONFIRMATO: Il fungo TR4 sta minacciando le piantagioni di banane Cavendish in tutto il mondo perché queste piante sono cloni genetici e quindi tutte vulnerabili allo stesso modo.",
+                        source: "FAO - Fusarium Wilt TR4",
+                        link: "https://www.fao.org/world-banana-forum/fusariumtr4/en/"
+                    }
+                ]
+            },
+            {
+                round: 7,
+                correct: 2,
+                options: [
+                    {
+                        text: "Gli scienziati europei hanno creato un cristallo capace di immagazzinare dati per 5 miliardi di anni.",
+                        isCorrect: false,
+                        explanation: "Questa è una FAKE NEWS (esagerazione). Esistono supporti in cristallo a lunghissima durata, ma '5 miliardi di anni' è una cifra speculativa non verificabile."
+                    },
+                    {
+                        text: "Microsoft ha annunciato l'acquisto di Nintendo per 40 miliardi di dollari.",
+                        isCorrect: false,
+                        explanation: "Questa è una FAKE NEWS. Microsoft non ha acquistato Nintendo, che rimane una compagnia indipendente."
+                    },
+                    {
+                        text: "Il Parlamento Europeo ha approvato una direttiva per rendere gli edifici a emissioni zero entro il 2030.",
+                        isCorrect: true,
+                        explanation: "CONFIRMATO: La direttiva sulla prestazione energetica nell'edilizia (EPBD) punta a decarbonizzare il settore edilizio entro il 2030 per i nuovi edifici.",
+                        source: "Parlamento Europeo - Comunicato Stampa",
+                        link: "https://www.europarl.europa.eu/news/it/press-room/20240308IPR19003/energy-performance-of-buildings-parliament-adopts-plans-to-decarbonise-sector"
+                    },
+                    {
+                        text: "Il governo australiano ha dichiarato illegale possedere più di 3 videogiochi per persona.",
+                        isCorrect: false,
+                        explanation: "Questa è una FAKE NEWS. Non esiste alcuna legge del genere in Australia."
+                    }
+                ]
+            },
+            {
+                round: 8,
+                correct: 0,
+                options: [
+                    {
+                        text: "I corvi possono riconoscere i volti umani che li hanno minacciati e ricordare questa informazione per anni.",
+                        isCorrect: true,
+                        explanation: "CONFIRMATO: Studi dell'Università di Washington hanno dimostrato che i corvi non solo riconoscono i volti umani pericolosi, ma 'insegnano' agli altri corvi a evitarli.",
+                        source: "University of Washington News",
+                        link: "https://www.washington.edu/news/2012/09/10/crows-react-to-threats-in-human-like-way/"
+                    },
+                    {
+                        text: "Gli scienziati giapponesi hanno creato un robot che può innamorarsi degli esseri umani.",
+                        isCorrect: false,
+                        explanation: "Questa è una FAKE NEWS. I robot non provano emozioni reali come l'amore."
+                    },
+                    {
+                        text: "Il Belgio ha legalizzato l'eutanasia per minori di 12 anni senza consenso dei genitori.",
+                        isCorrect: false,
+                        explanation: "Questa è una FAKE NEWS. Il consenso dei genitori è sempre obbligatorio per i minori in Belgio."
+                    },
+                    {
+                        text: "L'azienda Amazon ha aperto un hotel completamente gestito da robot senza personale umano.",
+                        isCorrect: false,
+                        explanation: "Questa è una FAKE NEWS. Amazon non gestisce hotel robotici."
+                    }
+                ]
+            },
+            {
+                round: 9,
+                correct: 1,
+                options: [
+                    {
+                        text: "L'FBI ha confermato l'esistenza degli alieni in un documento declassificato del 2023.",
+                        isCorrect: false,
+                        explanation: "Questa è una FAKE NEWS. Non esiste alcuna conferma ufficiale dell'esistenza di vita extraterrestre da parte dell'FBI."
+                    },
+                    {
+                        text: "Studi indicano che leggere su carta favorisce una migliore comprensione del testo rispetto agli schermi.",
+                        isCorrect: true,
+                        explanation: "CONFIRMATO: Diverse ricerche suggeriscono che la lettura su carta aiuta la memoria spaziale e riduce il carico cognitivo rispetto allo scrolling su schermo.",
+                        source: "Scientific American - The Reading Brain",
+                        link: "https://www.scientificamerican.com/article/reading-paper-screens/"
+                    },
+                    {
+                        text: "I medici svizzeri hanno eseguito il primo trapianto di testa umana con successo.",
+                        isCorrect: false,
+                        explanation: "Questa è una FAKE NEWS. Nessun trapianto di testa umana è mai stato effettuato con successo su un paziente vivo."
+                    },
+                    {
+                        text: "L'Olanda ha chiuso tutte le sue carceri per mancanza di criminalità.",
+                        isCorrect: false,
+                        explanation: "Questa è una FAKE NEWS. L'Olanda ha ridotto il numero di carceri, ma non le ha chiuse tutte."
+                    }
+                ]
+            },
+            {
+                round: 10,
+                correct: 3,
+                options: [
+                    {
+                        text: "Il caffè decaffeinato è stato inventato accidentalmente quando un carico di chicchi fu bagnato dall'acqua di mare.",
+                        isCorrect: false,
+                        explanation: "Questa è una FAKE NEWS. Fu inventato chimicamente da Ludwig Roselius nel 1903."
+                    },
+                    {
+                        text: "Gli scienziati cinesi hanno modificato geneticamente embrioni umani creando bambini super-intelligenti.",
+                        isCorrect: false,
+                        explanation: "Questa è una FAKE NEWS. Non esistono bambini modificati per la super-intelligenza."
+                    },
+                    {
+                        text: "L'India ha lanciato una missione su Marte costata meno del film 'Gravity'.",
+                        isCorrect: false,
+                        explanation: "Questa è una FAKE NEWS PARZIALE. Il costo è stato basso, ma il paragone è spesso usato in modo fuorviante per sminuire la complessità della missione."
+                    },
+                    {
+                        text: "L'Islanda genera quasi il 100% della sua elettricità da fonti rinnovabili.",
+                        isCorrect: true,
+                        explanation: "CONFIRMATO: Grazie all'energia idroelettrica e geotermica, l'Islanda è leader mondiale nella produzione di energia pulita per l'elettricità.",
+                        source: "Government of Iceland - Energy",
+                        link: "https://www.government.is/topics/business-and-industry/energy/"
+                    }
+                ]
+            },
+            {
+                round: 11,
+                correct: 0,
+                options: [
+                    {
+                        text: "I polpi hanno tre cuori e il loro sangue è di colore blu.",
+                        isCorrect: true,
+                        explanation: "CONFIRMATO: I polpi hanno tre cuori (uno sistemico e due branchiali) e il sangue blu perché usano l'emocianina (a base di rame) per trasportare l'ossigeno.",
+                        source: "Natural History Museum - Octopus Facts",
+                        link: "https://www.nhm.ac.uk/discover/octopuses-keep-surprising-us-here-are-eight-examples-how.html"
+                    },
+                    {
+                        text: "I pesci rossi hanno una memoria di soli 3 secondi.",
+                        isCorrect: false,
+                        explanation: "Questa è una FAKE NEWS. È un mito: i pesci rossi possono ricordare cose per mesi."
+                    },
+                    {
+                        text: "I tori odiano il colore rosso.",
+                        isCorrect: false,
+                        explanation: "Questa è una FAKE NEWS. I tori non vedono il rosso; caricano il movimento del mantello."
+                    },
+                    {
+                        text: "Gli struzzi mettono la testa sotto la sabbia per paura.",
+                        isCorrect: false,
+                        explanation: "Questa è una FAKE NEWS. È un mito derivato da un'illusione ottica quando abbassano il collo."
+                    }
+                ]
+            },
+            {
+                round: 12,
+                correct: 2,
+                options: [
+                    {
+                        text: "Internet pesa fisicamente 50 kg.",
+                        isCorrect: false,
+                        explanation: "Questa è una FAKE NEWS. È una stima teorica senza fondamento pratico reale."
+                    },
+                    {
+                        text: "Il mouse è stato inventato da Steve Jobs.",
+                        isCorrect: false,
+                        explanation: "Questa è una FAKE NEWS. Fu inventato da Douglas Engelbart molto prima."
+                    },
+                    {
+                        text: "Il primo 'bug' informatico era una vera falena incastrata in un computer.",
+                        isCorrect: true,
+                        explanation: "CONFIRMATO: Nel 1947, Grace Hopper trovò una falena in un relè del computer Mark II, coniando il termine 'bug' (insetto).",
+                        source: "National Geographic - World's First Computer Bug",
+                        link: "https://education.nationalgeographic.com/resource/worlds-first-computer-bug/"
+                    },
+                    {
+                        text: "La tastiera QWERTY serve per scrivere più veloce.",
+                        isCorrect: false,
+                        explanation: "Questa è una FAKE NEWS. Fu inventata per rallentare la digitazione ed evitare l'inceppamento delle macchine da scrivere."
+                    }
+                ]
+            },
+            {
+                round: 13,
+                correct: 1,
+                options: [
+                    {
+                        text: "Sushi significa pesce crudo.",
+                        isCorrect: false,
+                        explanation: "Questa è una FAKE NEWS. Significa riso acetato o aspro."
+                    },
+                    {
+                        text: "Il miele è un alimento che non scade praticamente mai se ben conservato.",
+                        isCorrect: true,
+                        explanation: "CONFIRMATO: Grazie alla bassa umidità e all'acidità, il miele crea un ambiente ostile ai batteri e può durare millenni.",
+                        source: "Smithsonian Magazine - Science of Honey",
+                        link: "https://www.smithsonianmag.com/science-nature/the-science-behind-honeys-eternal-shelf-life-1218690/"
+                    },
+                    {
+                        text: "I biscotti della fortuna sono cinesi.",
+                        isCorrect: false,
+                        explanation: "Questa è una FAKE NEWS. Sono stati inventati in California, USA."
+                    },
+                    {
+                        text: "I vichinghi avevano le corna sull'elmo.",
+                        isCorrect: false,
+                        explanation: "Questa è una FAKE NEWS. È un'invenzione scenica del XIX secolo."
+                    }
+                ]
+            },
+            {
+                round: 14,
+                correct: 0,
+                options: [
+                    {
+                        text: "Non ci sono ponti che attraversano il Rio delle Amazzoni principale.",
+                        isCorrect: true,
+                        explanation: "CONFIRMATO: Non esiste nessun ponte che attraversi il corso principale del Rio delle Amazzoni a causa della larghezza e del terreno instabile.",
+                        source: "Live Science - Amazon River Bridges",
+                        link: "https://www.livescience.com/why-no-bridges-over-amazon-river.html"
+                    },
+                    {
+                        text: "L'Everest è il punto più vicino allo spazio.",
+                        isCorrect: false,
+                        explanation: "Questa è una FAKE NEWS. È il Chimborazo in Ecuador, a causa del rigonfiamento terrestre."
+                    },
+                    {
+                        text: "Il Sahara è il deserto più grande del mondo.",
+                        isCorrect: false,
+                        explanation: "Questa è una FAKE NEWS. L'Antartide è il deserto più grande (deserto polare)."
+                    },
+                    {
+                        text: "La Muraglia Cinese si vede dalla Luna.",
+                        isCorrect: false,
+                        explanation: "Questa è una FAKE NEWS. Non è visibile a occhio nudo dalla Luna."
+                    }
+                ]
+            },
+            {
+                round: 15,
+                correct: 3,
+                options: [
+                    {
+                        text: "I bradipi esplodono se si muovono troppo veloce.",
+                        isCorrect: false,
+                        explanation: "Questa è una FAKE NEWS assurda."
+                    },
+                    {
+                        text: "I Koala sono orsi.",
+                        isCorrect: false,
+                        explanation: "Questa è una FAKE NEWS. Sono marsupiali."
+                    },
+                    {
+                        text: "Gli squali muoiono se si fermano.",
+                        isCorrect: false,
+                        explanation: "Questa è una FAKE NEWS. Molte specie possono respirare stando ferme."
+                    },
+                    {
+                        text: "I vombati fanno la cacca a forma di cubo.",
+                        isCorrect: true,
+                        explanation: "CONFIRMATO: I vombati producono feci cubiche per marcare il territorio senza che rotolino via.",
+                        source: "BBC News - Wombat Cube Poop",
+                        link: "https://www.bbc.com/news/world-australia-46258616"
+                    }
+                ]
+            }
+        ];
+
+        // ===== GAME STATE =====
+        let gameState = {
+            currentRound: 0,
+            score: 0,
+            timer: ROUND_DURATION,
+            timerInterval: null,
+            answers: [],
+            isAnswered: false
+        };
+
+        // ===== DOM ELEMENTS =====
+        const screens = {
+            home: document.getElementById('home-screen'),
+            game: document.getElementById('game-screen'),
+            gameover: document.getElementById('gameover-screen'),
+            feedback: document.getElementById('feedback-overlay')
+        };
+
+        const elements = {
+            score: document.getElementById('score'),
+            round: document.getElementById('round'),
+            totalRounds: document.getElementById('total-rounds'),
+            timerFill: document.getElementById('timer-fill'),
+            timerText: document.getElementById('timer-text'),
+            optionsContainer: document.getElementById('options-container'),
+            feedbackBox: document.getElementById('feedback-box'),
+            feedbackTitle: document.getElementById('feedback-title'),
+            feedbackText: document.getElementById('feedback-text'),
+            feedbackExplanation: document.getElementById('feedback-explanation'),
+            gameoverTitle: document.getElementById('gameover-title'),
+            finalScore: document.getElementById('final-score'),
+            statCorrect: document.getElementById('stat-correct'),
+            statRounds: document.getElementById('stat-rounds'),
+            statAccuracy: document.getElementById('stat-accuracy'),
+            resultsContainer: document.getElementById('results-container')
+        };
+
+        // ===== UTILITY FUNCTIONS =====
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        function showScreen(screenName) {
+            Object.values(screens).forEach(screen => {
+                screen.classList.remove('active');
+            });
+            screens[screenName].classList.add('active');
+        }
+
+        // ===== TIMER FUNCTIONS =====
+        function startTimer() {
+            gameState.timer = ROUND_DURATION;
+            updateTimerDisplay();
+            
+            gameState.timerInterval = setInterval(() => {
+                gameState.timer--;
+                updateTimerDisplay();
+                
+                if (gameState.timer <= 0) {
+                    clearInterval(gameState.timerInterval);
+                    handleTimeout();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const percentage = (gameState.timer / ROUND_DURATION) * 100;
+            elements.timerFill.style.width = percentage + '%';
+            elements.timerText.textContent = gameState.timer + 's';
+            
+            elements.timerFill.classList.remove('warning', 'danger');
+            if (gameState.timer <= 10) {
+                elements.timerFill.classList.add('danger');
+            } else if (gameState.timer <= 20) {
+                elements.timerFill.classList.add('warning');
+            }
+        }
+
+        function stopTimer() {
+            clearInterval(gameState.timerInterval);
+        }
+
+        // ===== GAME FUNCTIONS =====
+        function startGame() {
+            gameState = {
+                currentRound: 0,
+                score: 0,
+                timer: ROUND_DURATION,
+                timerInterval: null,
+                answers: [],
+                isAnswered: false
+            };
+            
+            elements.totalRounds.textContent = newsData.length;
+            showScreen('game');
+            loadRound();
+        }
+
+        function loadRound() {
+            if (gameState.currentRound >= newsData.length) {
+                endGame();
+                return;
+            }
+            
+            gameState.isAnswered = false;
+            const roundData = newsData[gameState.currentRound];
+            
+            // Shuffle options for this round
+            const shuffledOptions = shuffleArray(roundData.options);
+            
+            // Update UI
+            elements.round.textContent = gameState.currentRound + 1;
+            elements.score.textContent = gameState.score;
+            
+            // Clear and populate options
+            elements.optionsContainer.innerHTML = '';
+            
+            shuffledOptions.forEach((option, index) => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'news-option';
+                optionElement.innerHTML = `
+                    <span class="option-label">${String.fromCharCode(65 + index)}</span>
+                    <p class="option-text">${option.text}</p>
+                `;
+                optionElement.addEventListener('click', () => selectOption(index, option, shuffledOptions));
+                elements.optionsContainer.appendChild(optionElement);
+            });
+            
+            // Store correct index after shuffle
+            roundData.shuffledOptions = shuffledOptions;
+            
+            startTimer();
+        }
+
+        function selectOption(index, selectedOption, allOptions) {
+            if (gameState.isAnswered) return;
+            gameState.isAnswered = true;
+            
+            stopTimer();
+            
+            const isCorrect = selectedOption.isCorrect;
+            const roundData = newsData[gameState.currentRound];
+            
+            // Visual feedback
+            const options = elements.optionsContainer.querySelectorAll('.news-option');
+            options[index].classList.add(isCorrect ? 'correct' : 'wrong');
+            
+            if (!isCorrect) {
+                // Show correct answer
+                allOptions.forEach((opt, i) => {
+                    if (opt.isCorrect) {
+                        options[i].classList.add('correct');
+                    }
+                });
+            }
+            
+            // Store answer
+            gameState.answers.push({
+                round: gameState.currentRound + 1,
+                selected: selectedOption,
+                isCorrect: isCorrect,
+                correctOption: allOptions.find(opt => opt.isCorrect)
+            });
+            
+            // Show feedback after brief delay
+            setTimeout(() => {
+                showFeedback(isCorrect, selectedOption, allOptions.find(opt => opt.isCorrect));
+            }, 800);
+        }
+
+        function handleTimeout() {
+            if (gameState.isAnswered) return;
+            gameState.isAnswered = true;
+            
+            const roundData = newsData[gameState.currentRound];
+            const correctOption = roundData.shuffledOptions ? 
+                roundData.shuffledOptions.find(opt => opt.isCorrect) : 
+                roundData.options.find(opt => opt.isCorrect);
+            
+            // Visual feedback - show all wrong
+            const options = elements.optionsContainer.querySelectorAll('.news-option');
+            options.forEach((opt, i) => {
+                if (roundData.shuffledOptions[i].isCorrect) {
+                    opt.classList.add('correct');
+                }
+            });
+            
+            // Store answer as incorrect
+            gameState.answers.push({
+                round: gameState.currentRound + 1,
+                selected: null,
+                isCorrect: false,
+                correctOption: correctOption,
+                timeout: true
+            });
+            
+            setTimeout(() => {
+                showFeedback(false, null, correctOption, true);
+            }, 800);
+        }
+
+        function showFeedback(isCorrect, selectedOption, correctOption, isTimeout = false) {
+            elements.feedbackBox.className = 'feedback-box ' + (isCorrect ? 'correct' : 'wrong');
+            elements.feedbackTitle.textContent = isCorrect ? 'CORRETTO!' : 'SBAGLIATO!';
+            
+            if (isTimeout) {
+                elements.feedbackText.textContent = 'Il tempo è scaduto! Non hai selezionato nessuna risposta.';
+            } else if (isCorrect) {
+                elements.feedbackText.textContent = 'Hai individuato la notizia vera! Ottimo lavoro.';
+            } else {
+                elements.feedbackText.textContent = 'Hai scelto una fake news! La risposta corretta era diversa.';
+            }
+            
+            // Costruzione HTML con eventuale fonte
+            let sourceHtml = '';
+            if (correctOption.source) {
+                sourceHtml = `<span class="source-citation">Fonte: <a href="${correctOption.link}" target="_blank">${correctOption.source}</a></span>`;
+            }
+
+            elements.feedbackExplanation.innerHTML = `
+                <strong>${isCorrect ? '✓' : '→'} La notizia vera era:</strong><br>
+                "${correctOption.text}"<br><br>
+                <strong>Spiegazione:</strong> ${correctOption.explanation}
+                ${sourceHtml}
+            `;
+            
+            if (isCorrect) {
+                gameState.score += 100;
+                elements.score.textContent = gameState.score;
+            }
+            
+            screens.feedback.classList.add('active');
+        }
+
+        function nextRound() {
+            screens.feedback.classList.remove('active');
+            gameState.currentRound++;
+            
+            if (gameState.currentRound >= newsData.length) {
+                endGame();
+            } else {
+                loadRound();
+            }
+        }
+
+        function endGame() {
+            const correctAnswers = gameState.answers.filter(a => a.isCorrect).length;
+            const totalRounds = gameState.answers.length;
+            const accuracy = totalRounds > 0 ? Math.round((correctAnswers / totalRounds) * 100) : 0;
+            
+            // Check if player completed all rounds correctly (win condition)
+            const isWin = correctAnswers === newsData.length;
+            
+            elements.gameoverTitle.textContent = isWin ? 'VITTORIA!' : 'GAME OVER';
+            elements.gameoverTitle.className = 'gameover-title' + (isWin ? ' win' : '');
+            elements.finalScore.textContent = gameState.score;
+            elements.statCorrect.textContent = correctAnswers;
+            elements.statRounds.textContent = totalRounds;
+            elements.statAccuracy.textContent = accuracy + '%';
+            
+            // Generate results
+            elements.resultsContainer.innerHTML = '';
+            gameState.answers.forEach((answer, index) => {
+                const resultItem = document.createElement('div');
+                resultItem.className = 'result-item' + (answer.isCorrect ? ' correct-item' : '');
+                
+                let sourceHtml = '';
+                if (answer.correctOption.source) {
+                    sourceHtml = `<br><span class="source-citation" style="border:none; margin-top:5px; padding:0;">Fonte: <a href="${answer.correctOption.link}" target="_blank">${answer.correctOption.source}</a></span>`;
+                }
+
+                resultItem.innerHTML = `
+                    <p class="result-question">
+                        <strong>Round ${answer.round}:</strong> ${answer.isCorrect ? '✓ Corretto' : (answer.timeout ? '⏱ Tempo scaduto' : '✗ Sbagliato')}
+                    </p>
+                    <p class="result-answer">
+                        La notizia vera era: <span>"${answer.correctOption.text.substring(0, 100)}..."</span>
+                    </p>
+                    <p class="result-explanation">
+                        ${answer.correctOption.explanation.substring(0, 200)}...
+                        ${sourceHtml}
+                    </p>
+                `;
+                
+                elements.resultsContainer.appendChild(resultItem);
+            });
+            
+            showScreen('gameover');
+        }
+
+        function restartGame() {
+            startGame();
+        }
+
+        function goHome() {
+            showScreen('home');
+        }
+
+        // ===== INITIALIZATION =====
+        document.addEventListener('DOMContentLoaded', () => {
+            showScreen('home');
+        });
+    </script>
+</body>
+</html>
